@@ -128,7 +128,7 @@ func (m *Mods) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case textAreaMsg:
 		ti := textarea.New()
-		ti.Placeholder = "Once upon a time..."
+		ti.Placeholder = "Ask your AI assistant..."
 		ti.Focus()
 
 		m.textarea = ti
@@ -197,7 +197,7 @@ func (m *Mods) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+s":
 			if config.TextAreaMode {
 				m.textAreaInput = m.textarea.Value()
-				cmds = append(cmds, m.readStdinCmd)
+				cmds = append(cmds, m.findCacheOpsDetails())
 			}
 		case "q", "ctrl+c":
 			m.state = doneState
@@ -214,8 +214,8 @@ func (m *Mods) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, m.anim.Init())
 		} else {
 			m.anim, cmd = m.anim.Update(msg)
+			cmds = append(cmds, cmd)
 		}
-		cmds = append(cmds, cmd)
 	}
 	if m.viewportNeeded() {
 		// Only respond to keypresses when the viewport (i.e. the content) is
@@ -235,7 +235,11 @@ func (m *Mods) View() string {
 	//nolint:exhaustive
 	switch m.state {
 	case textAreaState:
-		return m.textarea.View()
+		return fmt.Sprintf(
+			"Enter your prompt...\n\n%s\n\n%s",
+			m.textarea.View(),
+			"(ctrl+c to quit) (ctrl+s to save)",
+		) + "\n\n"
 
 	case errorState:
 		return ""
