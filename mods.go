@@ -133,7 +133,6 @@ func (m *Mods) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		m.textarea = ti
 		m.state = textAreaState
-		//cmds = append(cmds, cmd)
 	case cacheDetailsMsg:
 		m.Config.cacheWriteToID = msg.WriteID
 		m.Config.cacheWriteToTitle = msg.Title
@@ -141,7 +140,7 @@ func (m *Mods) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		m.anim = newAnim(m.Config.Fanciness, m.Config.StatusText, m.renderer, m.Styles)
 		m.state = configLoadedState
-		cmds = append(cmds, readStdinCmd, m.anim.Init())
+		cmds = append(cmds, m.readStdinCmd, m.anim.Init())
 
 	case completionInput:
 		if msg.content != "" {
@@ -198,9 +197,7 @@ func (m *Mods) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+s":
 			if config.TextAreaMode {
 				m.textAreaInput = m.textarea.Value()
-				//readStdFromTextArea(m.textAreaInput)
-				cmds = append(cmds, m.readStdFromTextArea())
-
+				cmds = append(cmds, m.readStdinCmd)
 			}
 		case "q", "ctrl+c":
 			m.state = doneState
@@ -213,7 +210,8 @@ func (m *Mods) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 	if m.state == configLoadedState || m.state == requestState {
 		if config.TextAreaMode {
-			m.textarea, cmd = m.textarea.Update(msg)
+			m.anim = newAnim(m.Config.Fanciness, m.Config.StatusText, m.renderer, m.Styles)
+			cmds = append(cmds, m.anim.Init())
 		} else {
 			m.anim, cmd = m.anim.Update(msg)
 		}
@@ -602,13 +600,13 @@ func (m *Mods) findReadID(in string) (string, error) {
 	return "", err
 }
 
-func (m *Mods) readStdFromTextArea() tea.Cmd {
-	return func() tea.Msg {
-		return completionInput{m.textAreaInput}
-	}
-}
+//func (m *Mods) readStdFromTextArea() tea.Cmd {
+//	return func() tea.Msg {
+//		return completionInput{m.textAreaInput}
+//	}
+//}
 
-func readStdinCmd() tea.Msg {
+func (m *Mods) readStdinCmd() tea.Msg {
 	if !isInputTTY() {
 		reader := bufio.NewReader(os.Stdin)
 		stdinBytes, err := io.ReadAll(reader)
@@ -616,6 +614,9 @@ func readStdinCmd() tea.Msg {
 			return modsError{err, "Unable to read stdin."}
 		}
 		return completionInput{string(stdinBytes)}
+	}
+	if m.textAreaInput != "" {
+		return completionInput{m.textAreaInput}
 	}
 	return completionInput{""}
 }
