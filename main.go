@@ -82,6 +82,12 @@ var (
 				opts = append(opts, tea.WithInput(nil))
 			}
 
+			//if config.TextAreaMode {
+			//	fmt.Printf("text area mode activated")
+			//
+			//	return nil
+			//}
+
 			mods := newMods(stderrRenderer(), &config, db, cache)
 			p := tea.NewProgram(mods, opts...)
 			m, err := p.Run()
@@ -194,6 +200,7 @@ func initFlags() {
 	flags.BoolVar(&config.NoCache, "no-cache", config.NoCache, stdoutStyles().FlagDesc.Render(help["no-cache"]))
 	flags.BoolVar(&config.ResetSettings, "reset-settings", config.ResetSettings, stdoutStyles().FlagDesc.Render(help["reset-settings"]))
 	flags.BoolVar(&config.Settings, "settings", false, stdoutStyles().FlagDesc.Render(help["settings"]))
+	flags.BoolVar(&config.TextAreaMode, "text-area", false, stdoutStyles().FlagDesc.Render(help["text-area"]))
 	flags.BoolVar(&config.Dirs, "dirs", false, stdoutStyles().FlagDesc.Render(help["dirs"]))
 	flags.Lookup("prompt").NoOptDefVal = "-1"
 	flags.SortFlags = false

@@ -48,6 +48,7 @@ var help = map[string]string{
 	"delete":          "Deletes a saved conversation with the given title or ID.",
 	"show":            "Show a saved conversation with the given title or ID.",
 	"show-last":       "Show a the last saved conversation.",
+	"text-area":       "Enter text area mode to comfortability type your prompt.",
 }
 
 // Model represents the LLM model used in the API call.
@@ -120,6 +121,7 @@ type Config struct {
 	ShowLast          bool
 	Show              string
 	List              bool
+	TextAreaMode      bool
 	Delete            string
 
 	cacheReadFromID, cacheWriteToID, cacheWriteToTitle string
