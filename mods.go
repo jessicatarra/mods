@@ -70,12 +70,17 @@ func newMods(r *lipgloss.Renderer, cfg *Config, db *convoDB, cache *convoCache) 
 	gr, _ := glamour.NewTermRenderer(glamour.WithEnvironmentConfig())
 	vp := viewport.New(0, 0)
 	vp.GotoBottom()
+	ti := textarea.New()
+	ti.Placeholder = "Ask your AI assistant..."
+	ti.Focus()
+
 	return &Mods{
 		Styles:       makeStyles(r),
 		glam:         gr,
 		state:        startState,
 		renderer:     r,
 		glamViewport: vp,
+		textarea:     ti,
 		contentMutex: &sync.Mutex{},
 		db:           db,
 		cache:        cache,
@@ -127,11 +132,6 @@ func (m *Mods) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case textAreaMsg:
-		ti := textarea.New()
-		ti.Placeholder = "Ask your AI assistant..."
-		ti.Focus()
-
-		m.textarea = ti
 		m.state = textAreaState
 	case cacheDetailsMsg:
 		m.Config.cacheWriteToID = msg.WriteID
@@ -209,13 +209,9 @@ func (m *Mods) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, cmd)
 	}
 	if m.state == configLoadedState || m.state == requestState {
-		if config.TextAreaMode {
-			m.anim = newAnim(m.Config.Fanciness, m.Config.StatusText, m.renderer, m.Styles)
-			cmds = append(cmds, m.anim.Init())
-		} else {
-			m.anim, cmd = m.anim.Update(msg)
-			cmds = append(cmds, cmd)
-		}
+		m.anim, cmd = m.anim.Update(msg)
+		cmds = append(cmds, cmd)
+
 	}
 	if m.viewportNeeded() {
 		// Only respond to keypresses when the viewport (i.e. the content) is

@@ -82,12 +82,6 @@ var (
 				opts = append(opts, tea.WithInput(nil))
 			}
 
-			//if config.TextAreaMode {
-			//	fmt.Printf("text area mode activated")
-			//
-			//	return nil
-			//}
-
 			mods := newMods(stderrRenderer(), &config, db, cache)
 			p := tea.NewProgram(mods, opts...)
 			m, err := p.Run()
