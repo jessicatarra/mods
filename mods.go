@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/charmbracelet/bubbles/textarea"
 	"io"
 	"math"
 	"net/http"
@@ -28,7 +27,6 @@ type state int
 
 const (
 	startState state = iota
-	textAreaState
 	configLoadedState
 	requestState
 	responseState
@@ -48,8 +46,6 @@ type Mods struct {
 	renderer      *lipgloss.Renderer
 	glam          *glamour.TermRenderer
 	glamViewport  viewport.Model
-	textarea      textarea.Model
-	textAreaInput string
 	glamOutput    string
 	glamHeight    int
 	messages      []openai.ChatCompletionMessage
@@ -70,17 +66,12 @@ func newMods(r *lipgloss.Renderer, cfg *Config, db *convoDB, cache *convoCache) 
 	gr, _ := glamour.NewTermRenderer(glamour.WithEnvironmentConfig())
 	vp := viewport.New(0, 0)
 	vp.GotoBottom()
-	ti := textarea.New()
-	ti.Placeholder = "Ask your AI assistant..."
-	ti.Focus()
-
 	return &Mods{
 		Styles:       makeStyles(r),
 		glam:         gr,
 		state:        startState,
 		renderer:     r,
 		glamViewport: vp,
-		textarea:     ti,
 		contentMutex: &sync.Mutex{},
 		db:           db,
 		cache:        cache,
@@ -116,13 +107,6 @@ func (m modsError) Error() string {
 
 // Init implements tea.Model.
 func (m *Mods) Init() tea.Cmd {
-	if config.TextAreaMode {
-		return func() tea.Msg {
-			return textAreaMsg{
-				"",
-			}
-		}
-	}
 	return m.findCacheOpsDetails()
 }
 
@@ -131,8 +115,6 @@ func (m *Mods) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
-	case textAreaMsg:
-		m.state = textAreaState
 	case cacheDetailsMsg:
 		m.Config.cacheWriteToID = msg.WriteID
 		m.Config.cacheWriteToTitle = msg.Title
@@ -146,7 +128,7 @@ func (m *Mods) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.content != "" {
 			m.Input = msg.content
 		}
-		if msg.content == "" && m.Config.Prefix == "" && m.Config.Show == "" && !m.Config.ShowLast && !config.TextAreaMode {
+		if msg.content == "" && m.Config.Prefix == "" && m.Config.Show == "" && !m.Config.ShowLast && m.Config.TextAreaInput == "" {
 			return m, m.quit
 		}
 		m.state = requestState
@@ -194,19 +176,10 @@ func (m *Mods) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+s":
-			if config.TextAreaMode {
-				m.textAreaInput = m.textarea.Value()
-				cmds = append(cmds, m.findCacheOpsDetails())
-			}
 		case "q", "ctrl+c":
 			m.state = doneState
 			return m, m.quit
 		}
-	}
-	if m.state == textAreaState {
-		m.textarea, cmd = m.textarea.Update(msg)
-		cmds = append(cmds, cmd)
 	}
 	if m.state == configLoadedState || m.state == requestState {
 		m.anim, cmd = m.anim.Update(msg)
@@ -230,13 +203,6 @@ func (m Mods) viewportNeeded() bool {
 func (m *Mods) View() string {
 	//nolint:exhaustive
 	switch m.state {
-	case textAreaState:
-		return fmt.Sprintf(
-			"Enter your prompt...\n\n%s\n\n%s",
-			m.textarea.View(),
-			"(ctrl+c to quit) (ctrl+s to save)",
-		) + "\n\n"
-
 	case errorState:
 		return ""
 	case requestState:
@@ -536,10 +502,6 @@ type cacheDetailsMsg struct {
 	WriteID, Title, ReadID string
 }
 
-type textAreaMsg struct {
-	content string
-}
-
 func (m *Mods) findCacheOpsDetails() tea.Cmd {
 	return func() tea.Msg {
 		continueLast := m.Config.ContinueLast || (m.Config.Continue != "" && m.Config.Title == "")
@@ -600,12 +562,6 @@ func (m *Mods) findReadID(in string) (string, error) {
 	return "", err
 }
 
-//func (m *Mods) readStdFromTextArea() tea.Cmd {
-//	return func() tea.Msg {
-//		return completionInput{m.textAreaInput}
-//	}
-//}
-
 func (m *Mods) readStdinCmd() tea.Msg {
 	if !isInputTTY() {
 		reader := bufio.NewReader(os.Stdin)
@@ -615,8 +571,8 @@ func (m *Mods) readStdinCmd() tea.Msg {
 		}
 		return completionInput{string(stdinBytes)}
 	}
-	if m.textAreaInput != "" {
-		return completionInput{m.textAreaInput}
+	if m.Config.TextAreaInput != "" {
+		return completionInput{m.Config.TextAreaInput}
 	}
 	return completionInput{""}
 }

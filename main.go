@@ -82,6 +82,15 @@ var (
 				opts = append(opts, tea.WithInput(nil))
 			}
 
+			if config.TextAreaMode {
+				tamode := newTaMode(&config)
+				p := tea.NewProgram(tamode)
+				_, err := p.Run()
+				if err != nil {
+					return modsError{err, "Couldn't start Bubble Tea program."}
+				}
+			}
+
 			mods := newMods(stderrRenderer(), &config, db, cache)
 			p := tea.NewProgram(mods, opts...)
 			m, err := p.Run()

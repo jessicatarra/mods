@@ -122,6 +122,7 @@ type Config struct {
 	Show              string
 	List              bool
 	TextAreaMode      bool
+	TextAreaInput     string
 	Delete            string
 
 	cacheReadFromID, cacheWriteToID, cacheWriteToTitle string
