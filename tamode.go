@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
+	"golang.org/x/term"
+	"os"
 )
 
 type errMsg error
@@ -14,9 +16,23 @@ type tamode struct {
 	Config   *Config
 }
 
+func GetTerminalDimensions() (int, int) {
+	physicalWidth, physicalHeight, err := term.GetSize(int(os.Stdout.Fd()))
+	if err != nil {
+		panic("Could not determine terminal size")
+	}
+	return physicalWidth, physicalHeight
+}
+
 func newTaMode(cfg *Config) tamode {
+	width, _ := GetTerminalDimensions()
+
 	ti := textarea.New()
 	ti.Placeholder = "Ask your AI assistant..."
+	ti.CharLimit = 200000
+	ti.SetHeight(3)
+	ti.SetWidth(width)
+
 	ti.Focus()
 
 	return tamode{
