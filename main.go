@@ -136,7 +136,8 @@ var (
 				return resetSettings()
 			}
 
-			if config.ShowHelp || (config.Prefix == "" &&
+			if config.ShowHelp || (mods.Input == "" &&
+				config.Prefix == "" &&
 				config.Show == "" &&
 				!config.ShowLast &&
 				config.Delete == "" &&
