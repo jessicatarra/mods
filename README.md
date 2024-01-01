@@ -258,6 +258,12 @@ Your desired level of fanciness.
 Only output errors to standard err. Hides the spinner and success messages
 that would go to standard err.
 
+#### Text Area Mode
+
+`--text-area`
+
+Enter to text area mode, which will open a text area component. This is useful when you want to provide multi-line input or detailed text content.
+
 #### Reset Settings
 
 `--reset-settings`
