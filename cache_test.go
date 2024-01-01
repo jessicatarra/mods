@@ -37,7 +37,7 @@ func TestCache(t *testing.T) {
 		}
 		require.NoError(t, cache.write("fake", &messages))
 
-		result := []openai.ChatCompletionMessage{}
+		var result []openai.ChatCompletionMessage
 		require.NoError(t, cache.read("fake", &result))
 
 		require.ElementsMatch(t, messages, result)

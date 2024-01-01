@@ -122,13 +122,13 @@ func (m *Mods) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		m.anim = newAnim(m.Config.Fanciness, m.Config.StatusText, m.renderer, m.Styles)
 		m.state = configLoadedState
-		cmds = append(cmds, readStdinCmd, m.anim.Init())
+		cmds = append(cmds, m.readStdinCmd, m.anim.Init())
 
 	case completionInput:
 		if msg.content != "" {
 			m.Input = msg.content
 		}
-		if msg.content == "" && m.Config.Prefix == "" && m.Config.Show == "" && !m.Config.ShowLast {
+		if msg.content == "" && m.Config.Prefix == "" && m.Config.Show == "" && !m.Config.ShowLast && m.Config.TextAreaInput == "" {
 			return m, m.quit
 		}
 		m.state = requestState
@@ -184,6 +184,7 @@ func (m *Mods) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if m.state == configLoadedState || m.state == requestState {
 		m.anim, cmd = m.anim.Update(msg)
 		cmds = append(cmds, cmd)
+
 	}
 	if m.viewportNeeded() {
 		// Only respond to keypresses when the viewport (i.e. the content) is
@@ -561,7 +562,7 @@ func (m *Mods) findReadID(in string) (string, error) {
 	return "", err
 }
 
-func readStdinCmd() tea.Msg {
+func (m *Mods) readStdinCmd() tea.Msg {
 	if !isInputTTY() {
 		reader := bufio.NewReader(os.Stdin)
 		stdinBytes, err := io.ReadAll(reader)
@@ -569,6 +570,9 @@ func readStdinCmd() tea.Msg {
 			return modsError{err, "Unable to read stdin."}
 		}
 		return completionInput{string(stdinBytes)}
+	}
+	if m.Config.TextAreaInput != "" {
+		return completionInput{m.Config.TextAreaInput}
 	}
 	return completionInput{""}
 }

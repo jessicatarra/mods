@@ -84,6 +84,16 @@ mods --continue='naturals' --title='naturals.yaml' 'format as yaml'
 With this you'll end up with 3 conversations: `naturals`, `naturals.json`, and
 `naturals.yaml`.
 
+## Text Area Mode
+
+You can use the new `--text-area` flag to access the text area mode. This mode will open a text area bubble component, allowing you to type a prompt easily:
+
+```bash
+mods --text-area
+```
+
+This feature is particularly useful when you want to provide multi-line input or detailed text content.
+
 ## List conversations
 
 You can list your previous conversations with:
