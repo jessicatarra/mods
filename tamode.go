@@ -43,7 +43,6 @@ func newTaMode(cfg *Config) tamode {
 }
 
 func (t tamode) Init() tea.Cmd {
-	//return textarea.Blink
 	return textarea.Blink
 }
 
